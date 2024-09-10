@@ -17,7 +17,6 @@ def india_scatter_map():
     list_of_states = list(df['State'].unique())
     list_of_states.insert(0, 'Overall India')
 
-    st.sidebar.title('India Visualization')
     selected_state = st.sidebar.selectbox('Select State', list_of_states)
     primary = st.sidebar.selectbox('Select Primary Parameter', sorted(list(df.columns[5:6]) + list(df.columns[13:16]) + list(df.columns[18:])))
     secondary = st.sidebar.selectbox('Select Secondary Parameter', sorted(list(df.columns[5:6]) + list(df.columns[13:16]) + list(df.columns[18:])))
