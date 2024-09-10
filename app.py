@@ -13,8 +13,9 @@ st.sidebar.title('India Viualisation')
 
 selected_state=st.sidebar.selectbox('Select State',list_of_states)
 
-primary=st.sidebar.selectbox('select Primary Parameter',sorted(df.columns[5:]))
-secondary=st.sidebar.selectbox('select secondary Parameter',sorted(df.columns[5:]))
+primary=st.sidebar.selectbox('select Primary Parameter',['Choose a primary parameter']+sorted(df.columns[5:]))
+secondary=st.sidebar.selectbox('select secondary Parameter',['Choose a secondary parameter']+sorted(df.columns[5:]))
+
 
 plot=st.sidebar.button('plot Graph')
 
