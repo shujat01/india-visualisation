@@ -11,7 +11,7 @@ df = pd.read_csv('india.csv')
 # Define pages    
 def india_scatter_map():
     st.title("India Visualization App")
-    st.title("BY :-Shujjad Ali")
+    st.write("BY :-Shujjad Ali")
     st.sidebar.title('Scatter Map')
 
     list_of_states = list(df['State'].unique())
