@@ -7,7 +7,6 @@ st.set_page_config(layout='wide')
 
 # Load the data
 df = pd.read_csv('india.csv')
-
 # Define pages    
 def india_scatter_map():
     st.title("India Visualization App")
@@ -52,10 +51,10 @@ def india_bar_chart():
     if plot:
 
         if selected_state == 'Overall India':
-            fig = px.bar(df,x=x_axis,y=y_axis, width=1200, height=700,hover_name='State')
+            fig = px.bar(df,x=x_axis,y=y_axis, width=1200, height=700,hover_name='State',color='State')
         else:
             state_df = df[df['State'] == selected_state]
-            fig = px.bar(state_df,x=x_axis,y=y_axis,width=1200, height=700, hover_name='District')
+            fig = px.bar(state_df,x=x_axis,y=y_axis,width=1200, height=700, hover_name='District',color='District')
         
         st.plotly_chart(fig)
 
@@ -78,7 +77,7 @@ def india_scatter_plot():
             fig = px.scatter(df,x=x_axis,y=y_axis, width=1200, height=700, color="State",hover_name='State')
         else:
             state_df = df[df['State'] == selected_state]
-            fig = px.scatter(state_df,x=x_axis,y=y_axis,width=1200, height=700, hover_name='District')
+            fig = px.scatter(state_df,x=x_axis,y=y_axis,width=1200, height=700,color='District',hover_name='District')
         
         st.plotly_chart(fig)
 
