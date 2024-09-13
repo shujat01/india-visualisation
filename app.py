@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px 
 import base64
 from io import BytesIO
+import plotly.io as pio
 
 # Configure the app
 st.set_page_config(layout='wide', page_title="India Visualization App", page_icon="🇮🇳")
@@ -111,12 +112,10 @@ if df is not None:
                 fig.update_layout(xaxis_tickangle=-45)
                 st.plotly_chart(fig)
                 
-                # Add download button
-                buf = BytesIO()
-                fig.write_image(buf, format="png")
+                # Modified download button code
                 btn = st.download_button(
                     label="Download graph",
-                    data=buf.getvalue(),
+                    data=export_plot(fig),
                     file_name="bar_chart.png",
                     mime="image/png"
                 )
@@ -188,3 +187,13 @@ if df is not None:
 
 else:
     st.error("Unable to load data. Please check your data file and try again.")
+
+# Add this function at the end of the file
+def export_plot(fig):
+    try:
+        img_bytes = fig.to_image(format="png")
+        return img_bytes
+    except ValueError:
+        # Fallback to SVG if PNG export fails
+        svg_bytes = fig.to_image(format="svg")
+        return svg_bytes
