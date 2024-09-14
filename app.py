@@ -6,6 +6,7 @@ import base64
 from io import BytesIO
 import plotly.io as pio
 
+
 # Configure the app
 st.set_page_config(layout='wide', page_title="India Visualization App", page_icon="🇮🇳")
 
@@ -119,6 +120,7 @@ if df is not None:
                     file_name="bar_chart.png",
                     mime="image/png"
                 )
+           
             except Exception as e:
                 st.error(f"An error occurred while plotting: {str(e)}")
 
@@ -188,7 +190,6 @@ if df is not None:
 else:
     st.error("Unable to load data. Please check your data file and try again.")
 
-# Add this function at the end of the file
 def export_plot(fig):
     try:
         img_bytes = fig.to_image(format="png")
