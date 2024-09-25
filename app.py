@@ -5,6 +5,7 @@ import plotly.express as px
 import base64
 from io import BytesIO
 import plotly.io as pio
+import plotly.graph_objects as go
 
 
 # Configure the app
@@ -77,50 +78,85 @@ if df is not None:
             except Exception as e:
                 st.error(f"An error occurred while plotting: {str(e)}")
 
-    def india_bar_chart():
-        st.markdown('<p class="big-font">India Visualization App - Bar Chart</p>', unsafe_allow_html=True)
+    def india_choropleth_map():
+        st.markdown('<p class="big-font">India Visualization App - Choropleth Map</p>', unsafe_allow_html=True)
         
-        list_of_states = ['Overall India'] + sorted(df['State'].unique())
-        selected_state = st.sidebar.selectbox('Select State', list_of_states)
+        numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
+        selected_parameter = st.sidebar.selectbox('Select Parameter', sorted(numeric_columns))
+        
+        plot = st.sidebar.button('Plot Map')
+
+        if plot:
+            try:
+                state_data = df.groupby('State')[selected_parameter].mean().reset_index()
+                
+                fig = px.choropleth(
+                    state_data,
+                    geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
+                    featureidkey='properties.ST_NM',
+                    locations='State',
+                    color=selected_parameter,
+                    color_continuous_scale='Viridis',
+                    title=f'{selected_parameter} by State',
+                    width=1200,
+                    height=700
+                )
+
+                fig.update_geos(fitbounds="locations", visible=False)
+                st.plotly_chart(fig)
+                
+                # Modified download button
+                buf = BytesIO()
+                fig.write_image(buf, format="png")
+                btn = st.download_button(
+                    label="Download map",
+                    data=buf.getvalue(),
+                    file_name="choropleth_map.png",
+                    mime="image/png"
+                )
+            except Exception as e:
+                st.error(f"An error occurred while plotting: {str(e)}")
+
+    def trend_analysis():
+        st.markdown('<p class="big-font">India Visualization App - Trend Analysis</p>', unsafe_allow_html=True)
         
         numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
         x_axis = st.sidebar.selectbox('Select X-axis Parameter', sorted(numeric_columns))
         y_axis = st.sidebar.selectbox('Select Y-axis Parameter', sorted(numeric_columns))
         
-        aggregation = st.sidebar.selectbox('Select Aggregation', ['sum', 'mean', 'median', 'min', 'max'])
-        top_n = st.sidebar.number_input('Top N entries', min_value=1, max_value=50, value=10)
-        
-        plot = st.sidebar.button('Plot Graph')
+        plot = st.sidebar.button('Plot Trend')
 
         if plot:
             try:
-                if selected_state == 'Overall India':
-                    grouped_df = df.groupby('State').agg({x_axis: aggregation, y_axis: aggregation}).reset_index()
-                    grouped_df = grouped_df.sort_values(y_axis, ascending=False).head(top_n)
-                    fig = px.bar(grouped_df, x='State', y=y_axis, color=x_axis, 
-                                 labels={y_axis: f'{y_axis} ({aggregation})', x_axis: f'{x_axis} ({aggregation})'},
-                                 title=f'Top {top_n} States by {y_axis} ({aggregation})',
-                                 width=1200, height=700)
-                else:
-                    state_df = df[df['State'] == selected_state]
-                    grouped_df = state_df.groupby('District').agg({x_axis: aggregation, y_axis: aggregation}).reset_index()
-                    grouped_df = grouped_df.sort_values(y_axis, ascending=False).head(top_n)
-                    fig = px.bar(grouped_df, x='District', y=y_axis, color=x_axis,
-                                 labels={y_axis: f'{y_axis} ({aggregation})', x_axis: f'{x_axis} ({aggregation})'},
-                                 title=f'Top {top_n} Districts in {selected_state} by {y_axis} ({aggregation})',
+                # Create scatter plot
+                fig = px.scatter(df, x=x_axis, y=y_axis, color='State', 
+                                 hover_name='District',
+                                 title=f'Trend Analysis: {y_axis} vs {x_axis}',
                                  width=1200, height=700)
                 
-                fig.update_layout(xaxis_tickangle=-45)
+                # Calculate and add trendline
+                z = np.polyfit(df[x_axis], df[y_axis], 1)
+                p = np.poly1d(z)
+                fig.add_trace(go.Scatter(x=df[x_axis], y=p(df[x_axis]),
+                                         mode='lines', name='Trendline',
+                                         line=dict(color='red', dash='dash')))
+                
                 st.plotly_chart(fig)
                 
-                # Modified download button code
+                # Modified download button
+                buf = BytesIO()
+                fig.write_image(buf, format="png")
                 btn = st.download_button(
                     label="Download graph",
-                    data=export_plot(fig),
-                    file_name="bar_chart.png",
+                    data=buf.getvalue(),
+                    file_name="trend_analysis.png",
                     mime="image/png"
                 )
-           
+
+                # Calculate and display correlation
+                correlation = df[x_axis].corr(df[y_axis])
+                st.write(f"Correlation between {x_axis} and {y_axis}: {correlation:.2f}")
+
             except Exception as e:
                 st.error(f"An error occurred while plotting: {str(e)}")
 
@@ -178,7 +214,8 @@ if df is not None:
     # Sidebar for navigation
     pages = {
         "Scatter Map": india_scatter_map,
-        "Bar Chart": india_bar_chart,
+        "Choropleth Map": india_choropleth_map,
+        "Trend Analysis": trend_analysis,
         "Scatter Plot": india_scatter_plot,
         "Data Summary": data_summary
     }
@@ -189,12 +226,3 @@ if df is not None:
 
 else:
     st.error("Unable to load data. Please check your data file and try again.")
-
-def export_plot(fig):
-    try:
-        img_bytes = fig.to_image(format="png")
-        return img_bytes
-    except ValueError:
-        # Fallback to SVG if PNG export fails
-        svg_bytes = fig.to_image(format="svg")
-        return svg_bytes
